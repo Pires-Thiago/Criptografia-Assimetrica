@@ -14,28 +14,83 @@ int str_to_long(const char * str, long long * num) {
     }
 }
 
-void sieve_of_eratosthenes(long long n, int * primes) {   
-    for (long long p = 2; p * p <= n; p++) { 
-        if (primes[p]) { 
-            for (long long i = p * p; i <= n; i += p) 
-                primes[i] = 0; 
-        } 
-    } 
+int is_prime(long long n) {
+    if (n <= 1)  return 0; 
+    if (n <= 3)  return 1; 
+  
+    if (n % 2 == 0 || n % 3 == 0) return 0; 
+  
+    for (int i = 5; i * i <= n; i += 6) 
+        if (n % i == 0 || n % (i + 2) == 0) 
+           return 0; 
+  
+    return 1; 
 }
 
-int is_prime(int num, int * primes) {
-    return primes[num] ? 1 : 0;
+int coprime(long long phi, long long num1, long long num2) {
+
+	long long i, e;
+	for(i = 2; i < phi; i++){
+
+		if(phi%i != 0 && is_prime(i) && i != num1 && i != num2){
+			e = i;
+			break;
+		}
+	}
+
+	return e;
 }
 
-int common_prime(long long n, int * primes) {
-    for (long long p = 2; p * p <= n; p++) { 
-        if (primes[p]) { 
-            if (n % p != 0) {
-                return p;
+long long gdc_extended(long long a, long long b){
+	
+	long long r, q, xB = 1, yB = 0, x = 0, y = 1, alpha, beta, phi;
+	phi = r = a;
+
+	while(r != 0){
+		if(a >= 0) {
+            q = 0;
+            r = a;
+            while(r >= b) {
+
+                r -= b;
+                q += 1;
             }
-        } 
-    } 
+        }
+		a = b;
+		b = r;
+		if(r > 0) {
+			alpha = xB - q *x;
+			beta = yB - q * y;
 
+			xB = x;
+			yB = y;
+			x = alpha;
+			y = beta;
+		}
+	}
+
+	if(beta < 0)
+		beta = phi + beta;
+
+	return beta;
+
+}
+
+int save_file(const char * filename, long long key1, long long key2) {
+    FILE * fptr = fopen(filename, "w"); 
+    
+    if (fptr == NULL) { 
+        fprintf(stdout, "Nao e possivel criar o arquivo %s\n", filename); 
+        return -1; 
+    } 
+    
+    fprintf(fptr, "%lld\n%lld", key1, key2);
+    
+    if (fptr) {
+        fclose(fptr); 
+    }
+
+    return 0;
 }
 
 int main(int argc, char ** argv) {
@@ -55,17 +110,13 @@ int main(int argc, char ** argv) {
         return -1;
     }
 
-    int primes[num1 * num2 + 1]; //usar tamanho como sqrt
-    memset(primes, 1, sizeof(primes));
-    sieve_of_eratosthenes(num1 * num2, primes);
-
     // verifica se os numeros sao primos
-    if (!is_prime(num1, primes)) {
+    if (!is_prime(num1)) {
         fprintf(stdout, "Entrada <primo_1> nao e primo\n");
         return -1;
     }
     
-    if (!is_prime(num2, primes)) {
+    if (!is_prime(num2)) {
         fprintf(stdout, "Entrada <primo_2> nao e primo\n");
         return -1;
     }
@@ -74,16 +125,21 @@ int main(int argc, char ** argv) {
     long long chave_publica_1, chave_publica_2, y;
     chave_publica_1 = num1 * num2;
     y = (num1 - 1) * (num2 - 1);
-    chave_publica_2 = common_prime(y, primes);
-
-    fprintf(stdout, "Chaves publicas mod[%lld] - pot[%lld]\n", chave_publica_1, chave_publica_2);
-
-    // gera chaves privadas
-    long long chave_privada_1, chave_privada_2;
-    chave_privada_1 = chave_publica_1;
-    chave_privada_2 = (y * 2 + 1) / chave_publica_2;
+    chave_publica_2 = coprime(y, num1, num2);
     
-    fprintf(stdout, "Chaves privadas mod[%lld] - pot[%lld]\n", chave_privada_1, chave_privada_2);
+    // salva chaves publicas (criptografia)
+    if (save_file("numcripto.txt", chave_publica_2, chave_publica_1) != 0) {
+        return -1;
+    }
 
+    // gera chave privada (usado aritmetica do GDC extended)
+    long long chave_privada = gdc_extended(y, chave_publica_2);
+    // long long chave_privada = (y * 2 + 1) / chave_publica_2; 
+
+    // salva chaves privada e mod (decriptografia)
+    if (save_file("numdescripto.txt", chave_privada, chave_publica_1) != 0) {
+        return -1;
+    }
+    
     return 0;
 }
