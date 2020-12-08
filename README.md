@@ -1,5 +1,5 @@
 # Criptografia-Assimetrica
 
---Universidade do Estado do Rio de Janeiro
+--Universidade do Estado do Rio de Janeiro (UERJ)
 
---Matéria: laboratório de Porgramação
+--Matéria: Laboratório de Programação
