@@ -4,7 +4,7 @@ GERANUM_OBJ=geranum.o
 CRIPTO_OBJ=cripto.o
 
 %.o: %.c
-	$(CC) -c -o $@ $< $(CFLAGS)
+	$(CC) -c -o -std=c99 -Wall -Werror -pedantic $@ $< $(CFLAGS)
 
 all: geranum cripto
 
